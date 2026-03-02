@@ -13,6 +13,7 @@ class growView extends WatchUi.SimpleDataField {
     private const DEBUG_SLOPE_LOG = false;
     private const DIST_EVENT_TOLERANCE_KM = 0.02f;
     private const DIST_SPECIAL_MARKERS = [5.0f, 10.0f, 15.0f, 20.0f, 21.1f, 25.0f, 30.0f, 35.0f, 40.0f, 42.2f];
+    private const SCREENSHOT_SCENE_INTERVAL_MS = 30000;
     private const TRAINING_MIN_UPDATE_MS = 5000;
     private const RACE_MIN_UPDATE_BASE_MS = 20000;
     private const RACE_MIN_UPDATE_SPAN_MS = 10000;
@@ -338,6 +339,26 @@ class growView extends WatchUi.SimpleDataField {
     (:raceMode)
     private function getAppMode() as String {
         return "RACE";
+    }
+
+    (:screenshotMode)
+    private function getAppMode() as String {
+        return "TRAINING";
+    }
+
+    (:trainingMode)
+    private function isScreenshotMode() as Boolean {
+        return false;
+    }
+
+    (:raceMode)
+    private function isScreenshotMode() as Boolean {
+        return false;
+    }
+
+    (:screenshotMode)
+    private function isScreenshotMode() as Boolean {
+        return true;
     }
 
     private function isRaceMode() as Boolean {
@@ -970,7 +991,7 @@ class growView extends WatchUi.SimpleDataField {
             case "FL_Z1":
                 return "楽に滑らか";
             case "FL_Z2":
-                return "目標ペース";
+                return "いいペース";
             case "FL_Z3":
                 return "深く呼吸";
             case "FL_Z4":
@@ -1157,10 +1178,31 @@ class growView extends WatchUi.SimpleDataField {
         return pickFixedMessageEng(stateKey);
     }
 
+    private function screenshotSceneMessage(nowMs as Number?, lang as String) as String {
+        var index = 0;
+        if (nowMs != null) {
+            index = ((nowMs / SCREENSHOT_SCENE_INTERVAL_MS).toNumber()) % 3;
+        }
+
+        switch (index) {
+            case 0:
+                return pickCategoryMessage("WARN", "UP_Z4", 0, lang);
+            case 1:
+                return pickCategoryMessage("PRAISE", "FL_Z2", 0, lang);
+        }
+
+        return buildDistanceEventMessage(10.0f, 0, lang);
+    }
+
     function compute(info as Activity.Info) as Numeric or Duration or String or Null {
         // Step 8: Race mode adds WARN priority and slower update cadence.
         var nowMs = System.getTimer();
         var lang = resolveMessageLanguage();
+        if (isScreenshotMode()) {
+            var screenshotMessage = screenshotSceneMessage(nowMs, lang);
+            return applyMessageUpdate(screenshotMessage, nowMs, true, 0);
+        }
+
         var zone = zoneFromHeartRate(info.currentHeartRate);
         var slope = updateSlopeState(info.altitude, info.elapsedDistance);
         var stateKey = buildStateKey(slope, zone);

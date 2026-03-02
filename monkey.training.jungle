@@ -1,1 +1,1 @@
-base.excludeAnnotations = raceMode
+base.excludeAnnotations = raceMode;screenshotMode

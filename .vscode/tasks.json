@@ -52,6 +52,31 @@
       "problemMatcher": []
     },
     {
+      "label": "Monkey C: Build Screenshot",
+      "type": "process",
+      "command": "java",
+      "args": [
+        "-Xms1g",
+        "-Dfile.encoding=UTF-8",
+        "-Dapple.awt.UIElement=true",
+        "-jar",
+        "${env:CONNECTIQ_HOME}/bin/monkeybrains.jar",
+        "-o",
+        "bin/grow.prg",
+        "-f",
+        "${workspaceFolder}/monkey.jungle;${workspaceFolder}/monkey.screenshot.jungle",
+        "-y",
+        "${workspaceFolder}/.vscode/developer_key",
+        "-d",
+        "fr255_sim",
+        "-w"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Monkey C: Run Current PRG",
       "type": "process",
       "command": "${workspaceFolder}/scripts/run_prg_with_retry.sh",
@@ -116,6 +141,15 @@
       "dependsOrder": "sequence",
       "dependsOn": [
         "Monkey C: Build Race",
+        "Monkey C: Run Current PRG"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Monkey C: Build+Run Screenshot",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Monkey C: Build Screenshot",
         "Monkey C: Run Current PRG"
       ],
       "problemMatcher": []
