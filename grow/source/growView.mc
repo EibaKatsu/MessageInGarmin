@@ -21,8 +21,6 @@ class growView extends WatchUi.SimpleDataField {
     private const DISPLAY_MAX_CHARS = 18;
     private const DISPLAY_ELLIPSIS = "...";
     private const FORCE_MESSAGE_LANGUAGE = "AUTO";
-    private const DEBUG_LANGUAGE_LOG = false;
-    private const DEBUG_LANGUAGE_LOG_INTERVAL_MS = 3000;
 
     private var _lastAltitude as Float?;
     private var _lastDistance as Float?;
@@ -34,7 +32,6 @@ class growView extends WatchUi.SimpleDataField {
     private var _lastMessageUpdateMs as Number?;
     private var _recentMessages as Array<String>;
     private var _pendingDistMessage as String?;
-    private var _lastLanguageLogMs as Number?;
 
     function initialize() {
         SimpleDataField.initialize();
@@ -49,160 +46,71 @@ class growView extends WatchUi.SimpleDataField {
         _lastMessageUpdateMs = null;
         _recentMessages = [] as Array<String>;
         _pendingDistMessage = null;
-        _lastLanguageLogMs = null;
-        if (DEBUG_LANGUAGE_LOG) {
-            System.println("[grow][lang] initialize complete");
-        }
     }
 
     private function normalizeMessageLanguage(value as String) as String or Null {
-        if (DEBUG_LANGUAGE_LOG) {
-            System.println("[grow][lang] normalize input=" + value);
-        }
         var upper = value.toUpper();
         var isJpn = upper.equals("JPN") || upper.equals("JA") || upper.equals("JAPANESE");
         var isEng = upper.equals("ENG") || upper.equals("EN") || upper.equals("ENGLISH");
-        if (DEBUG_LANGUAGE_LOG) {
-            System.println(
-                "[grow][lang] normalize upper=" + upper
-                + " len=" + upper.length()
-                + " isJpn=" + isJpn
-                + " isEng=" + isEng
-            );
-        }
         if (isJpn) {
-            if (DEBUG_LANGUAGE_LOG) {
-                System.println("[grow][lang] normalize -> JPN");
-            }
             return "JPN";
         }
         if (isEng) {
-            if (DEBUG_LANGUAGE_LOG) {
-                System.println("[grow][lang] normalize -> ENG");
-            }
             return "ENG";
         }
 
-        if (DEBUG_LANGUAGE_LOG) {
-            System.println("[grow][lang] normalize -> null");
-        }
         return null;
     }
 
     private function resolveMessageLanguage() as String {
-        if (DEBUG_LANGUAGE_LOG) {
-            System.println("[grow][lang] resolve start");
-        }
         var forced = normalizeMessageLanguage(FORCE_MESSAGE_LANGUAGE);
         if (forced != null) {
-            if (DEBUG_LANGUAGE_LOG) {
-                System.println("[grow][lang] resolve forced=" + forced);
-            }
             return forced;
         }
 
         try {
             var deviceLanguage = System.getDeviceSettings().systemLanguage;
-            if (DEBUG_LANGUAGE_LOG) {
-                System.println(
-                    "[grow][lang] deviceLanguage raw=" + deviceLanguage
-                    + " (ENG=" + System.LANGUAGE_ENG
-                    + ", JPN=" + System.LANGUAGE_JPN
-                    + ", FIN=" + System.LANGUAGE_FIN + ")"
-                );
-            }
             if (deviceLanguage == System.LANGUAGE_JPN) {
-                if (DEBUG_LANGUAGE_LOG) {
-                    System.println("[grow][lang] resolve by device constant=JPN");
-                }
                 return "JPN";
             }
             if (deviceLanguage == System.LANGUAGE_ENG) {
-                if (DEBUG_LANGUAGE_LOG) {
-                    System.println("[grow][lang] resolve by device constant=ENG");
-                }
                 return "ENG";
             }
 
             if (deviceLanguage instanceof String) {
                 var normalizedDevice = normalizeMessageLanguage(deviceLanguage as String);
                 if (normalizedDevice != null) {
-                    if (DEBUG_LANGUAGE_LOG) {
-                        System.println("[grow][lang] resolve by device string=" + normalizedDevice);
-                    }
                     return normalizedDevice;
                 }
             }
 
             var normalizedDeviceText = normalizeMessageLanguage(deviceLanguage.toString());
             if (normalizedDeviceText != null) {
-                if (DEBUG_LANGUAGE_LOG) {
-                    System.println("[grow][lang] resolve by device toString=" + normalizedDeviceText);
-                }
                 return normalizedDeviceText;
             }
         } catch (e) {
-            if (DEBUG_LANGUAGE_LOG) {
-                System.println("[grow][lang] device language error=" + e);
-            }
             // Continue to resource fallback.
         }
 
         try {
             if (Rez.Strings has :MessageLanguage) {
                 var languageResource = Application.loadResource(Rez.Strings.MessageLanguage);
-                if (DEBUG_LANGUAGE_LOG) {
-                    System.println("[grow][lang] resource raw=" + languageResource);
-                }
                 if (languageResource instanceof String) {
                     var normalizedResource = normalizeMessageLanguage(languageResource as String);
                     if (normalizedResource != null) {
-                        if (DEBUG_LANGUAGE_LOG) {
-                            System.println("[grow][lang] resolve by resource=" + normalizedResource);
-                        }
                         return normalizedResource;
                     }
                 }
             }
         } catch (e) {
-            if (DEBUG_LANGUAGE_LOG) {
-                System.println("[grow][lang] resource error=" + e);
-            }
             // Fall back to ENG when language cannot be resolved.
         }
 
-        if (DEBUG_LANGUAGE_LOG) {
-            System.println("[grow][lang] resolve fallback=ENG");
-        }
         return "ENG";
     }
 
     private function isJapaneseLanguage(lang as String) as Boolean {
         return lang.equals("JPN");
-    }
-
-    private function logLanguageHeartbeat(
-        nowMs as Number?,
-        lang as String,
-        stateKey as String,
-        category as String or Null
-    ) as Void {
-        if (!DEBUG_LANGUAGE_LOG || nowMs == null) {
-            return;
-        }
-
-        if (_lastLanguageLogMs != null && (nowMs - _lastLanguageLogMs) < DEBUG_LANGUAGE_LOG_INTERVAL_MS) {
-            return;
-        }
-
-        var categoryText = category == null ? "-" : (category as String);
-        System.println(
-            "[grow][lang] heartbeat lang=" + lang
-            + " stateKey=" + stateKey
-            + " category=" + categoryText
-            + " display=" + _displayMessage
-        );
-        _lastLanguageLogMs = nowMs;
     }
 
     private function zoneFromHeartRate(heartRate as Number?) as String {
@@ -522,14 +430,6 @@ class growView extends WatchUi.SimpleDataField {
     }
 
     private function pickCategoryMessage(category as String, stateKey as String, variant as Number, lang as String) as String {
-        if (DEBUG_LANGUAGE_LOG) {
-            System.println(
-                "[grow][lang] pick category=" + category
-                + " stateKey=" + stateKey
-                + " variant=" + variant
-                + " lang=" + lang
-            );
-        }
         if (isJapaneseLanguage(lang)) {
             return pickCategoryMessageJpn(category, stateKey, variant);
         }
@@ -881,7 +781,6 @@ class growView extends WatchUi.SimpleDataField {
         var stateKey = buildStateKey(slope, zone);
         var minUpdateMs = minUpdateMsForMode(stateKey);
         var distMessage = detectDistanceEvent(info.elapsedDistance, lang);
-        logLanguageHeartbeat(nowMs, lang, stateKey, null);
 
         if (isRaceMode()) {
             if (distMessage != null) {
@@ -890,7 +789,6 @@ class growView extends WatchUi.SimpleDataField {
 
             if (isRaceWarningState(stateKey)) {
                 var warnMessage = pickNonDuplicateCategoryMessage(info, stateKey, "WARN", lang);
-                logLanguageHeartbeat(nowMs, lang, stateKey, "WARN");
                 return applyMessageUpdate(warnMessage, nowMs, true, minUpdateMs);
             }
 
@@ -907,7 +805,6 @@ class growView extends WatchUi.SimpleDataField {
         if (isRaceMode()) {
             category = pickRaceCategory(info, stateKey);
         }
-        logLanguageHeartbeat(nowMs, lang, stateKey, category);
         var categoryMessage = pickNonDuplicateCategoryMessage(info, stateKey, category, lang);
         return applyMessageUpdate(categoryMessage, nowMs, false, minUpdateMs);
     }
