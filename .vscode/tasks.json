@@ -50,6 +50,37 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "Monkey C: Run Current PRG",
+      "type": "process",
+      "command": "${workspaceFolder}/scripts/run_prg_with_retry.sh",
+      "args": [
+        "bin/grow.prg",
+        "fr255"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Monkey C: Build+Run Training",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Monkey C: Build Training",
+        "Monkey C: Run Current PRG"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "Monkey C: Build+Run Race",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "Monkey C: Build Race",
+        "Monkey C: Run Current PRG"
+      ],
+      "problemMatcher": []
     }
   ]
 }

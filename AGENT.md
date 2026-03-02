@@ -471,7 +471,7 @@ JPN「もう5キロやん、早っ！」
 ### 13.1 開発原則
 1. 一度に作り込まない。1機能ずつ実装して毎回動作確認する。
 2. `Training版` を先に完成させ、`Race版` は差分実装で後追いする。
-3. 各ステップで `Build Current Project` 成功、`fr255_sim` で表示確認、ログに例外なしを完了条件にする。
+3. 各ステップで `Build` 成功、`Build+Run` による `fr255_sim` 表示確認、ログに例外なしを完了条件にする。
 4. 失敗時は直前ステップの成功状態まで戻してから原因修正し、次ステップへ進む。
 5. 1ステップごとにスコープを固定し、未着手機能は明示的に後工程へ回す。
 
@@ -506,3 +506,11 @@ JPN「もう5キロやん、早っ！」
 5. Step 8: Raceで危険警告がDISTより優先される。
 6. Step 9: 日本語文言が `?` に化けず表示される、または英語フォールバックが必ず動作する。
 7. 全Step共通: ビルド成功、表示崩れなし、クラッシュなし。
+
+### 13.6 Build/Run運用ルール
+- 表示確認は必ず `Monkey C: Build+Run Training` または `Monkey C: Build+Run Race` を使う（最新 `bin/grow.prg` を Simulator に再投入するため）。
+- `Monkey C: Build Training` / `Monkey C: Build Race` / `Build Current Project` はコンパイル確認専用として扱う。
+- デバイス指定は「ビルド時 `-d fr255_sim`」「`monkeydo` 実行時 `fr255`」を使い分ける（`fr255_sim` を `monkeydo` に渡すと `Unable to load device` になる）。
+- `Build+Run` は `scripts/run_prg_with_retry.sh` 経由で接続待ちリトライ（最大20回/1秒間隔）を実施する。
+- Simulator 未起動でも `Build+Run` を先に実行してよい（スクリプトが `ConnectIQ.app` 起動を試行する）。
+- 失敗時の一次切り分けは、`CONNECTIQ_HOME`、`$CONNECTIQ_HOME/bin/ConnectIQ.app` の存在、`monkeydo` の device id (`fr255`) の順で確認する。
