@@ -12,6 +12,15 @@ max_retries="${CIQ_RUN_RETRIES:-30}"
 retry_interval_sec="${CIQ_RUN_RETRY_INTERVAL_SEC:-1}"
 kill_before_run="${CIQ_KILL_BEFORE_RUN:-0}"
 attempt_timeout_sec="${CIQ_RUN_ATTEMPT_TIMEOUT_SEC:-8}"
+open_simulator="${CIQ_OPEN_SIMULATOR:-1}"
+interactive_mode="${CIQ_INTERACTIVE_MODE:-0}"
+
+if [[ "${interactive_mode}" != "0" ]]; then
+  # Interactive mode is for simulator menu operations (e.g. Activity Data selection).
+  # Keep it one-shot to avoid repeated app reloads while dialogs are open.
+  max_retries=1
+  retry_interval_sec=0
+fi
 
 if [[ -z "${CONNECTIQ_HOME:-}" ]]; then
   echo "CONNECTIQ_HOME is not set." >&2
@@ -41,9 +50,11 @@ if [[ "${kill_before_run}" != "0" ]]; then
   sleep 1
 fi
 
-# Start simulator as macOS app bundle.
-open -a "${connectiq_app}" >/dev/null 2>&1 || open "${connectiq_app}" >/dev/null 2>&1 || true
-sleep 2
+if [[ "${open_simulator}" != "0" ]]; then
+  # Start simulator as macOS app bundle.
+  open -a "${connectiq_app}" >/dev/null 2>&1 || open "${connectiq_app}" >/dev/null 2>&1 || true
+  sleep 2
+fi
 
 runtime_device_id="${device_id%_sim}"
 if [[ -z "${runtime_device_id}" ]]; then

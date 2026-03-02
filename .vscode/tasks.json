@@ -60,7 +60,45 @@
         "fr255"
       ],
       "options": {
-        "cwd": "${workspaceFolder}"
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CIQ_INTERACTIVE_MODE": "0",
+          "CIQ_OPEN_SIMULATOR": "1"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Monkey C: Run Current PRG (Auto Retry)",
+      "type": "process",
+      "command": "${workspaceFolder}/scripts/run_prg_with_retry.sh",
+      "args": [
+        "bin/grow.prg",
+        "fr255"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CIQ_INTERACTIVE_MODE": "0",
+          "CIQ_OPEN_SIMULATOR": "1"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Monkey C: Run Current PRG (Interactive)",
+      "type": "process",
+      "command": "${workspaceFolder}/scripts/run_prg_with_retry.sh",
+      "args": [
+        "bin/grow.prg",
+        "fr255"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "CIQ_INTERACTIVE_MODE": "1",
+          "CIQ_OPEN_SIMULATOR": "0"
+        }
       },
       "problemMatcher": []
     },

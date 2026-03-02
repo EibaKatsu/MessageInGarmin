@@ -35,7 +35,7 @@ class growView extends WatchUi.SimpleDataField {
 
     function initialize() {
         SimpleDataField.initialize();
-        label = "HR Zone";
+        label = "Zone Coach";
         _lastAltitude = null;
         _lastDistance = null;
         _slopeState = "FL";
@@ -52,11 +52,23 @@ class growView extends WatchUi.SimpleDataField {
         var upper = value.toUpper();
         var isJpn = upper.equals("JPN") || upper.equals("JA") || upper.equals("JAPANESE");
         var isEng = upper.equals("ENG") || upper.equals("EN") || upper.equals("ENGLISH");
+        var isSpa = upper.equals("SPA") || upper.equals("ES") || upper.equals("SPANISH");
+        var isFre = upper.equals("FRE") || upper.equals("FR") || upper.equals("FRENCH");
+        var isDeu = upper.equals("DEU") || upper.equals("DE") || upper.equals("GERMAN");
         if (isJpn) {
             return "JPN";
         }
         if (isEng) {
             return "ENG";
+        }
+        if (isSpa) {
+            return "SPA";
+        }
+        if (isFre) {
+            return "FRE";
+        }
+        if (isDeu) {
+            return "DEU";
         }
 
         return null;
@@ -75,6 +87,15 @@ class growView extends WatchUi.SimpleDataField {
             }
             if (deviceLanguage == System.LANGUAGE_ENG) {
                 return "ENG";
+            }
+            if (deviceLanguage == System.LANGUAGE_SPA) {
+                return "SPA";
+            }
+            if (deviceLanguage == System.LANGUAGE_FRE) {
+                return "FRE";
+            }
+            if (deviceLanguage == System.LANGUAGE_DEU) {
+                return "DEU";
             }
 
             if (deviceLanguage instanceof String) {
@@ -111,6 +132,18 @@ class growView extends WatchUi.SimpleDataField {
 
     private function isJapaneseLanguage(lang as String) as Boolean {
         return lang.equals("JPN");
+    }
+
+    private function isSpanishLanguage(lang as String) as Boolean {
+        return lang.equals("SPA");
+    }
+
+    private function isFrenchLanguage(lang as String) as Boolean {
+        return lang.equals("FRE");
+    }
+
+    private function isGermanLanguage(lang as String) as Boolean {
+        return lang.equals("DEU");
     }
 
     private function zoneFromHeartRate(heartRate as Number?) as String {
@@ -226,15 +259,29 @@ class growView extends WatchUi.SimpleDataField {
         return 0;
     }
 
+    private function timeSeed10s(timerTime as Number?) as Number {
+        if (timerTime != null) {
+            return (timerTime / 10000).toNumber();
+        }
+
+        return (System.getTimer() / 10000).toNumber();
+    }
+
+    private function timeSeed1s(timerTime as Number?) as Number {
+        if (timerTime != null) {
+            return (timerTime / 1000).toNumber();
+        }
+
+        return (System.getTimer() / 1000).toNumber();
+    }
+
     private function pickTrainingCategory(info as Activity.Info, stateKey as String) as String {
         // Step 4 ratio target:
         // FUNNY 25 / SALT 20 / ALCOHOL 20 / TOXIC 10 / FIXED 15 / PRAISE 10
         var bucketSource = stateKeyCode(stateKey) * 7;
 
-        if (info.timerTime != null) {
-            // Change selection roughly every 10s to keep output readable.
-            bucketSource += (info.timerTime / 10000).toNumber();
-        }
+        // Change selection roughly every 10s to keep output readable.
+        bucketSource += timeSeed10s(info.timerTime);
         if (info.currentHeartRate != null) {
             bucketSource += info.currentHeartRate;
         }
@@ -263,9 +310,7 @@ class growView extends WatchUi.SimpleDataField {
         // FIXED 55 / PRAISE 25 / WARN 15 / FUNNY 5
         var bucketSource = stateKeyCode(stateKey) * 11;
 
-        if (info.timerTime != null) {
-            bucketSource += (info.timerTime / 10000).toNumber();
-        }
+        bucketSource += timeSeed10s(info.timerTime);
         if (info.currentHeartRate != null) {
             bucketSource += info.currentHeartRate;
         }
@@ -429,9 +474,174 @@ class growView extends WatchUi.SimpleDataField {
         return pickFixedMessage(stateKey, "ENG");
     }
 
+    private function pickCategoryMessageSpa(category as String, stateKey as String, variant as Number) as String {
+        var idx = variant % 3;
+        switch (category) {
+            case "FIXED":
+                return pickFixedMessage(stateKey, "SPA");
+            case "WARN":
+                if (idx == 0) {
+                    return "Baja un poco";
+                } else if (idx == 1) {
+                    return "Muy alto, calma";
+                }
+                return "Control primero";
+            case "FUNNY":
+                if (idx == 0) {
+                    return "Suave y sonriente";
+                } else if (idx == 1) {
+                    return "Cara relajada";
+                }
+                return "Fluye con calma";
+            case "SALT":
+                if (idx == 0) {
+                    return "Sin perder foco";
+                } else if (idx == 1) {
+                    return "Revisa ritmo";
+                }
+                return "Ritmo estable";
+            case "ALCOHOL":
+                if (idx == 0) {
+                    return "Primero agua";
+                } else if (idx == 1) {
+                    return "Nada de tambaleo";
+                }
+                return "Sorbo y sigue";
+            case "TOXIC":
+                if (idx == 0) {
+                    return "Sin excusas";
+                } else if (idx == 1) {
+                    return "Aun hay margen";
+                }
+                return "No te rindas";
+            case "PRAISE":
+                if (idx == 0) {
+                    return "Muy bien hecho";
+                } else if (idx == 1) {
+                    return "Buen control";
+                }
+                return "Gran disciplina";
+        }
+
+        return pickFixedMessage(stateKey, "SPA");
+    }
+
+    private function pickCategoryMessageFre(category as String, stateKey as String, variant as Number) as String {
+        var idx = variant % 3;
+        switch (category) {
+            case "FIXED":
+                return pickFixedMessage(stateKey, "FRE");
+            case "WARN":
+                if (idx == 0) {
+                    return "Leve le pied";
+                } else if (idx == 1) {
+                    return "Trop chaud, calme";
+                }
+                return "Controle d abord";
+            case "FUNNY":
+                if (idx == 0) {
+                    return "Reste leger";
+                } else if (idx == 1) {
+                    return "Detends le visage";
+                }
+                return "Souris et avance";
+            case "SALT":
+                if (idx == 0) {
+                    return "Reste lucide";
+                } else if (idx == 1) {
+                    return "Revois l allure";
+                }
+                return "Rythme stable";
+            case "ALCOHOL":
+                if (idx == 0) {
+                    return "Eau d abord";
+                } else if (idx == 1) {
+                    return "Pas de pas flous";
+                }
+                return "Petite gorgee";
+            case "TOXIC":
+                if (idx == 0) {
+                    return "Pas d excuses";
+                } else if (idx == 1) {
+                    return "Tu peux encore";
+                }
+                return "Ne lache pas";
+            case "PRAISE":
+                if (idx == 0) {
+                    return "Super boulot";
+                } else if (idx == 1) {
+                    return "Tres bon controle";
+                }
+                return "Belle discipline";
+        }
+
+        return pickFixedMessage(stateKey, "FRE");
+    }
+
+    private function pickCategoryMessageDeu(category as String, stateKey as String, variant as Number) as String {
+        var idx = variant % 3;
+        switch (category) {
+            case "FIXED":
+                return pickFixedMessage(stateKey, "DEU");
+            case "WARN":
+                if (idx == 0) {
+                    return "Nimm Tempo raus";
+                } else if (idx == 1) {
+                    return "Zu heiss, beruhig";
+                }
+                return "Kontrolle zuerst";
+            case "FUNNY":
+                if (idx == 0) {
+                    return "Locker bleiben";
+                } else if (idx == 1) {
+                    return "Gesicht entspannen";
+                }
+                return "Laecheln und los";
+            case "SALT":
+                if (idx == 0) {
+                    return "Bleib fokussiert";
+                } else if (idx == 1) {
+                    return "Pace pruefen";
+                }
+                return "Rhythmus halten";
+            case "ALCOHOL":
+                if (idx == 0) {
+                    return "Erst Wasser";
+                } else if (idx == 1) {
+                    return "Kein Wackelschritt";
+                }
+                return "Kleiner Schluck";
+            case "TOXIC":
+                if (idx == 0) {
+                    return "Keine Ausreden";
+                } else if (idx == 1) {
+                    return "Da geht noch was";
+                }
+                return "Bleib dran";
+            case "PRAISE":
+                if (idx == 0) {
+                    return "Starke Arbeit";
+                } else if (idx == 1) {
+                    return "Saubere Kontrolle";
+                }
+                return "Top Disziplin";
+        }
+
+        return pickFixedMessage(stateKey, "DEU");
+    }
+
     private function pickCategoryMessage(category as String, stateKey as String, variant as Number, lang as String) as String {
         if (isJapaneseLanguage(lang)) {
             return pickCategoryMessageJpn(category, stateKey, variant);
+        }
+        if (isSpanishLanguage(lang)) {
+            return pickCategoryMessageSpa(category, stateKey, variant);
+        }
+        if (isFrenchLanguage(lang)) {
+            return pickCategoryMessageFre(category, stateKey, variant);
+        }
+        if (isGermanLanguage(lang)) {
+            return pickCategoryMessageDeu(category, stateKey, variant);
         }
 
         return pickCategoryMessageEng(category, stateKey, variant);
@@ -521,9 +731,57 @@ class growView extends WatchUi.SimpleDataField {
         return [markerKey + "km done", markerKey + "km in. Keep smooth."];
     }
 
+    private function distanceMessagesForKeySpa(markerKey as String) as Array<String> or Null {
+        switch (markerKey) {
+            case "1": return ["1 km hecho. Buen inicio!", "1 km. Sigue suelto."];
+            case "5": return ["5 km ya. Muy bien!", "5 km hechos. Ritmo fino."];
+            case "10": return ["10 km. Muy solido.", "10 km. Agua y sigue."];
+            case "21.1": return ["Media hecha. Vamos!", "21.1 km. Segunda parte."];
+            case "30": return ["30 km. Punto clave.", "30 km. Respira y sigue."];
+            case "42.2": return ["Meta! Lo lograste.", "42.2 km. Enorme!"];
+        }
+
+        return [markerKey + " km hechos", markerKey + " km. Ritmo estable."];
+    }
+
+    private function distanceMessagesForKeyFre(markerKey as String) as Array<String> or Null {
+        switch (markerKey) {
+            case "1": return ["1 km fait. Bon depart!", "1 km. Reste souple."];
+            case "5": return ["5 km deja. Top!", "5 km faits. Bon tempo."];
+            case "10": return ["10 km. Tres propre.", "10 km. Eau puis go."];
+            case "21.1": return ["Semi passe. Allez!", "21.1 km. Deuxieme moitie."];
+            case "30": return ["30 km. Moment cle.", "30 km. Respire et avance."];
+            case "42.2": return ["Arrivee! Tu l as fait.", "42.2 km. Immense!"];
+        }
+
+        return [markerKey + " km faits", markerKey + " km. Garde le rythme."];
+    }
+
+    private function distanceMessagesForKeyDeu(markerKey as String) as Array<String> or Null {
+        switch (markerKey) {
+            case "1": return ["1 km geschafft. Stark!", "1 km. Locker weiter."];
+            case "5": return ["Schon 5 km. Top!", "5 km geschafft. Ruhig bleiben."];
+            case "10": return ["10 km. Sehr sauber.", "10 km. Wasser check."];
+            case "21.1": return ["Halbmarathon durch!", "21.1 km. Zweite Haelfte."];
+            case "30": return ["30 km. Schluesselpunkt.", "30 km. Atmen und weiter."];
+            case "42.2": return ["Ziel! Du hast es.", "42.2 km. Riesenlauf!"];
+        }
+
+        return [markerKey + " km geschafft", markerKey + " km. Ruhig und sauber."];
+    }
+
     private function distanceMessagesForKey(markerKey as String, lang as String) as Array<String> or Null {
         if (isJapaneseLanguage(lang)) {
             return distanceMessagesForKeyJpn(markerKey);
+        }
+        if (isSpanishLanguage(lang)) {
+            return distanceMessagesForKeySpa(markerKey);
+        }
+        if (isFrenchLanguage(lang)) {
+            return distanceMessagesForKeyFre(markerKey);
+        }
+        if (isGermanLanguage(lang)) {
+            return distanceMessagesForKeyDeu(markerKey);
         }
 
         return distanceMessagesForKeyEng(markerKey);
@@ -539,6 +797,15 @@ class growView extends WatchUi.SimpleDataField {
 
         if (isJapaneseLanguage(lang)) {
             return markerKey + "km 通過";
+        }
+        if (isSpanishLanguage(lang)) {
+            return markerKey + " km hecho";
+        }
+        if (isFrenchLanguage(lang)) {
+            return markerKey + " km passe";
+        }
+        if (isGermanLanguage(lang)) {
+            return markerKey + " km geschafft";
         }
 
         return markerKey + "km done";
@@ -588,9 +855,7 @@ class growView extends WatchUi.SimpleDataField {
 
     private function buildMessagePickSeed(info as Activity.Info, stateKey as String) as Number {
         var seed = stateKeyCode(stateKey) * 13;
-        if (info.timerTime != null) {
-            seed += (info.timerTime / 1000).toNumber();
-        }
+        seed += timeSeed1s(info.timerTime);
         if (info.currentHeartRate != null) {
             seed += info.currentHeartRate;
         }
@@ -764,9 +1029,129 @@ class growView extends WatchUi.SimpleDataField {
         return "Waiting HR";
     }
 
+    private function pickFixedMessageSpa(stateKey as String) as String {
+        switch (stateKey) {
+            case "UP_Z1":
+                return "Guarda en subida";
+            case "UP_Z2":
+                return "Empuja con brazos";
+            case "UP_Z3":
+                return "Brazos firmes";
+            case "UP_Z4":
+                return "Baja un poco";
+            case "UP_Z5":
+                return "Recorta ahora";
+            case "FL_Z1":
+                return "Suave y fluido";
+            case "FL_Z2":
+                return "Ritmo objetivo";
+            case "FL_Z3":
+                return "Respira profundo";
+            case "FL_Z4":
+                return "Muy rapido, calma";
+            case "FL_Z5":
+                return "Baja un punto";
+            case "DN_Z1":
+                return "Baja con forma";
+            case "DN_Z2":
+                return "Pisada suave";
+            case "DN_Z3":
+                return "No te embales";
+            case "DN_Z4":
+                return "Vas pasado";
+            case "DN_Z5":
+                return "Peligro, baja";
+        }
+
+        return "Esperando FC";
+    }
+
+    private function pickFixedMessageFre(stateKey as String) as String {
+        switch (stateKey) {
+            case "UP_Z1":
+                return "Garde en cote";
+            case "UP_Z2":
+                return "Pousse avec bras";
+            case "UP_Z3":
+                return "Bras plus actifs";
+            case "UP_Z4":
+                return "Leve le pied";
+            case "UP_Z5":
+                return "Redescends vite";
+            case "FL_Z1":
+                return "Souple et fluide";
+            case "FL_Z2":
+                return "Allure cible";
+            case "FL_Z3":
+                return "Respire profond";
+            case "FL_Z4":
+                return "Trop vite, calme";
+            case "FL_Z5":
+                return "Baisse d un cran";
+            case "DN_Z1":
+                return "Propre en descente";
+            case "DN_Z2":
+                return "Impact leger";
+            case "DN_Z3":
+                return "Pas trop vite";
+            case "DN_Z4":
+                return "Surallure";
+            case "DN_Z5":
+                return "Danger, ralentis";
+        }
+
+        return "FC en attente";
+    }
+
+    private function pickFixedMessageDeu(stateKey as String) as String {
+        switch (stateKey) {
+            case "UP_Z1":
+                return "Bergauf sparen";
+            case "UP_Z2":
+                return "Arme einsetzen";
+            case "UP_Z3":
+                return "Arme aktiv";
+            case "UP_Z4":
+                return "Tempo raus";
+            case "UP_Z5":
+                return "Jetzt runter";
+            case "FL_Z1":
+                return "Locker und rund";
+            case "FL_Z2":
+                return "Zieltempo halten";
+            case "FL_Z3":
+                return "Tief atmen";
+            case "FL_Z4":
+                return "Zu schnell, ruhig";
+            case "FL_Z5":
+                return "Einen Gang runter";
+            case "DN_Z1":
+                return "Sauber bergab";
+            case "DN_Z2":
+                return "Weich auftreten";
+            case "DN_Z3":
+                return "Nicht ueberziehen";
+            case "DN_Z4":
+                return "Ueberpace";
+            case "DN_Z5":
+                return "Gefahr, runter";
+        }
+
+        return "Warte auf HF";
+    }
+
     private function pickFixedMessage(stateKey as String, lang as String) as String {
         if (isJapaneseLanguage(lang)) {
             return pickFixedMessageJpn(stateKey);
+        }
+        if (isSpanishLanguage(lang)) {
+            return pickFixedMessageSpa(stateKey);
+        }
+        if (isFrenchLanguage(lang)) {
+            return pickFixedMessageFre(stateKey);
+        }
+        if (isGermanLanguage(lang)) {
+            return pickFixedMessageDeu(stateKey);
         }
 
         return pickFixedMessageEng(stateKey);
